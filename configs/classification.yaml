@@ -1,1 +1,40 @@
+# configs/classification.yaml
+# Configuration for glomeruli classification model
+
+# Data settings
+data:
+  root: "data"
+  processed_dir: "processed"
+
+# Model settings
+model:
+  type: "manet"
+  base_filters: 64
+  dropout_rate: 0.5
+
+# Training settings
+training:
+  batch_size: 16
+  num_workers: 4
+  epochs: 100
+  optimizer: "adam"
+  learning_rate: 0.0001
+  weight_decay: 0.0001
+  loss: "cross_entropy"
+  device: "cuda"
   
+  # Scheduler settings
+  scheduler: "plateau"
+  scheduler_gamma: 0.5
+  scheduler_patience: 10
+  
+  # Early stopping
+  early_stopping_patience: 20
+  
+  # Random seed
+  random_seed: 42
+
+# Logging settings
+logging:
+  save_dir: "experiments"
+  log_interval: 10

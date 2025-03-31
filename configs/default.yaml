@@ -1,1 +1,60 @@
-  
+# configs/default.yaml
+# Default configuration for Glomeruli-MANet project
+
+# Data paths and organization
+# Update these paths in configs/default.yaml
+# Verify these paths in configs/default.yaml
+data:
+  root: "data"  # Project-relative path
+  raw_dir: "raw"
+  annotation_dir: "annotations"
+  processed_dir: "processed"
+  train_ratio: 0.7
+  val_ratio: 0.1
+  test_ratio: 0.2
+
+# Preprocessing settings
+preprocessing:
+  patch_size: 256
+  magnification: 20.0
+  context_factor: 1.2
+  num_workers: 4
+  normalization:
+    method: "z-score"
+    mean: [0.5, 0.5, 0.5]
+    std: [0.5, 0.5, 0.5]
+
+# Segmentation model settings
+segmentation:
+  model: "unet++"
+  input_channels: 3
+  output_channels: 1
+  filters: [32, 64, 128, 256, 512]
+  deep_supervision: true
+  loss:
+    type: "bce_dice"
+    bce_weight: 0.5
+    dice_weight: 0.5
+
+# Training settings
+training:
+  batch_size: 16
+  epochs: 100
+  learning_rate: 0.0001
+  weight_decay: 0.0001
+  scheduler:
+    type: "reduce_lr_on_plateau"
+    patience: 10
+    factor: 0.5
+  early_stopping:
+    patience: 20
+    min_delta: 0.001
+  random_seed: 42
+  device: "cuda"
+
+# Logging and checkpoints
+logging:
+  save_dir: "experiments"
+  log_interval: 10
+  checkpoint_interval: 5
+  tensorboard: true 
