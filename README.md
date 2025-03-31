@@ -1,14 +1,14 @@
-# Glomeruli-MANet: Production-Grade Deep Learning for Renal Biopsy Analysis
+# Glomeruli-MANet: Deep Learning for Glomeruli Sclerosis Classification
 
 ## Project Overview
-This project implements a state-of-the-art deep learning framework for renal biopsy wet slide image analysis. The system follows a two-stage approach:
+This project implements a deep learning framework for classifying glomeruli states in renal biopsy images. The system focuses on identifying four distinct states:
 
-1. **Pre-segmentation Module**: UNet++ architecture for glomeruli segmentation
-2. **Classification Module**: Multiple Attention Network (MANet) for classifying:
-   - Deposition region (capillary wall, mesangial)
-   - Deposition appearance (granular, lumps, linear)
+1. **Normal**: Healthy glomeruli without sclerosis
+2. **Partially Sclerotic**: Glomeruli showing early signs of sclerosis
+3. **Sclerotic**: Fully sclerotic glomeruli
+4. **Uncertain**: Cases where classification is ambiguous
 
-The system is designed to process wet slide images from SVS slides annotated with QuPath, automating the identification and classification of glomeruli to support pathologists in diagnosing glomerulonephritis.
+The system is designed to process whole slide images (WSI) from renal biopsies, automating the classification of glomeruli to support pathologists in diagnosing kidney conditions.
 
 ## System Requirements
 - Python 3.11
@@ -23,7 +23,6 @@ The system is designed to process wet slide images from SVS slides annotated wit
 glomeruli-manet/
 ├── configs/                      # Configuration files
 │   ├── default.yaml              # Base settings
-│   ├── segmentation.yaml         # Segmentation model settings
 │   ├── classification.yaml       # Classification model settings
 │   └── training.yaml             # Training hyperparameters
 ├── data/                         # Data directories
@@ -31,14 +30,14 @@ glomeruli-manet/
 │   ├── annotations/              # QuPath GeoJSON annotations
 │   └── processed/                # Processed images and masks
 │       ├── train/
-│       │   ├── images/           # Training images
-│       │   ├── masks/            # Segmentation masks
-│       │   └── metadata.json     # Training patch metadata
+│       │   ├── normal/           # Normal glomeruli images
+│       │   ├── partially_sclerotic/  # Partially sclerotic images
+│       │   ├── sclerotic/        # Fully sclerotic images
+│       │   └── uncertain/        # Uncertain cases
 │       ├── val/
 │       └── test/
 ├── logs/                         # Training logs
 ├── experiments/                  # Model checkpoints and results
-│   ├── segmentation/             # Segmentation model checkpoints
 │   ├── classification/           # Classification model checkpoints
 │   └── results/                  # Evaluation results and visualizations
 ├── notebooks/                    # Jupyter notebooks for analysis
@@ -76,11 +75,11 @@ pip install -e .
 ```
 
 ## Data Preprocessing
-The system uses QuPath's GeoJSON annotations to extract and process regions of interest from SVS slides:
+The system processes whole slide images (WSI) from renal biopsies:
 
 1. **WSI Loading**: Load slides using OpenSlide library
 2. **Annotation Parsing**: Parse QuPath GeoJSON annotations
-3. **Patch Extraction**: Extract patches at the appropriate magnification
+3. **Patch Extraction**: Extract glomeruli patches at appropriate magnification
 4. **Normalization**: Apply Z-score normalization for consistent input
 
 Example:
@@ -90,38 +89,41 @@ python scripts/preprocess_wsi.py --config configs/default.yaml
 
 ## Model Architecture
 
-### UNet++ Segmentation Module
-The segmentation model uses UNet++ with a pre-trained ResNet34 encoder backbone for effective glomeruli isolation:
-- Deep supervision for improved feature learning
-- Skip connections to preserve spatial information
-- Dice + BCE combined loss function
+### Glomeruli Classifier
+The model uses a CNN-based architecture with attention mechanisms:
 
-### MANet Classification Module
-The classification module employs multiple attention mechanisms:
-- Dynamic Selection Mechanism: Adapts to varying glomerular sizes using different convolution kernels
-- Channel Attention: Focuses on important features through channel relationships
-- Spatial Attention: Improves localization within the image
+- **Backbone**: Pre-trained ResNet50 with custom classification head
+- **Attention**: CBAM (Convolutional Block Attention Module) for focusing on relevant regions
+- **Classification**: 4-class softmax output for sclerosis states
 
-The model includes parallel branches for region and appearance classification, with the results fused to generate comprehensive reports.
+Key features:
+- Multi-scale feature extraction
+- Attention-based feature refinement
+- Class-balanced training
+- Uncertainty estimation
 
 ## Training Pipeline
 The training process follows these steps:
 
-1. **Pre-segmentation Training**:
-   - Input: Raw immunofluorescence images
-   - Output: Segmentation masks for glomeruli
+1. **Data Preparation**:
+   - Extract glomeruli patches from WSIs
+   - Apply data augmentation
+   - Balance classes if necessary
 
-2. **Classification Training**:
-   - Input: Segmented glomeruli
-   - Output: Region and appearance classifications
+2. **Model Training**:
+   - Train on balanced dataset
+   - Validate on separate set
+   - Monitor class-wise performance
 
-Training parameters are fully configurable through YAML files, with sensible defaults based on the published research.
+Training parameters are configurable through YAML files, with defaults optimized for medical image classification.
 
 ## Evaluation and Metrics
 The system uses multiple metrics to evaluate performance:
-- Segmentation: Dice coefficient, IoU
-- Classification: Accuracy, precision, recall, F1-score, AUC
-- Visualization: Grad-CAM for model interpretability
+- Overall accuracy
+- Per-class precision, recall, and F1-score
+- Confusion matrix
+- ROC curves for each class
+- Uncertainty analysis
 
 ## Deployment
 The application can be deployed using:
